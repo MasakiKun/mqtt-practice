@@ -1,9 +1,24 @@
+plugins {
+	id("java")
+}
+
+[compileJava, compileTestJava]*.options*.encoding = "UTF-8"
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
+}
+
 group "kr.ayukawa"
 
 subprojects {
-	plugins {
-		id("java")
-	}
+	apply plugin: "java"
 
 	[compileJava, compileTestJava]*.options*.encoding = "UTF-8"
 
