@@ -1,0 +1,22 @@
+group "kr.ayukawa"
+
+subprojects {
+	plugins {
+		id("java")
+	}
+
+	[compileJava, compileTestJava]*.options*.encoding = "UTF-8"
+
+	repositories {
+		mavenCentral()
+	}
+
+	task initSourceFolders {
+		sourceSets*.java.srcDirs*.each {
+			if(!it.exists()) { it.mkdirs() }
+		}
+		sourceSets*.resources.srcDirs*.each {
+			if(!it.exists()) { it.mkdir() }
+		}
+	}
+}
