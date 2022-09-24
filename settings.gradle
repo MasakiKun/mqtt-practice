@@ -2,3 +2,4 @@ rootProject.name = 'mqtt-practice'
 
 include "001-paho-client-basic"
 include "002-paho-pub-and-sub"
+include "003-using-spring-integration"

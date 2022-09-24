@@ -1,0 +1,4 @@
+dependencies {
+	implementation("org.springframework.boot:spring-boot-starter-integration:2.7.4")
+	implementation("org.springframework.integration:spring-integration-mqtt:5.5.15")
+}
