@@ -1,0 +1,8 @@
+mqtt:
+  host: 192.168.5.129
+  port: 1883
+  username: mqttuser
+  password: 1q2w3e
+  qos: 2
+  topic:
+    root: hello/world/#
