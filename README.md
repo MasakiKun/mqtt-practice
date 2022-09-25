@@ -43,3 +43,15 @@ Publish 클래스와 Subscribe 클래스가 분리된 것을 제외하고는 Pah
 
 Spring Integration에 익숙하다면 어렵지 않을 코드일 것 같은데, [EIP](https://www.enterpriseintegrationpatterns.com/)에 익숙하지 않아서
 이해하고 예제를 작성하는데에 애를 좀 먹었다.
+
+실제 코드를 분석해보면서 Spring Integration에 대해서 의식의 흐름대로(...) 분석한 내용을 해당 프로젝트에 문서로 작성해 두었다.
+
+## using-Spring-Integration-inbound-single-thread-output-multiple-thread-each-topic-name
+
+Spring Boot + Spring Integration + MQTT 조합에서, MQTT 토픽명에 따라 별도의 스레드를 할당해서 처리하도록 구현된 코드.
+
+MQTT를 통해서 전달받는 메시지의 양이 점점 커짐에 따라, 시스템이 그 메시지 양을 다 처리하지 못해서 구상한 코드.
+
+다만 해당 프로젝트의 README 파일에도 있지만, 실제 프로덕션 레벨에서 쓰이지는 못한 코드라서 생각지도 못한 문제가 있을수 있다.
+
+사용하지 못한 코드라서 그 외에도 몇가지 고민사항이 있는데, 마찬가지로 프로젝트의 README 파일에 정리해 두었다.
