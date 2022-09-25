@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.IntegrationComponentScan;
+import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.config.EnableIntegration;
@@ -15,10 +17,12 @@ import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.endpoint.MessageProducerSupport;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
+import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.handler.annotation.Header;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
@@ -45,7 +49,6 @@ public class MqttConfig {
 	private static final String MQTT_PASSWORD = "1q2w3e";
 	private static final int MQTT_QoS = 2;
 	private static final String MQTT_TOPIC_NAME = "hello/world/message";
-	private static final String MQTT_CLIENT_ID = UUID.randomUUID().toString();
 
 	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -82,7 +85,7 @@ public class MqttConfig {
 	@Bean
 	public MessageProducerSupport mqttInboundChannel() {
 		MqttPahoMessageDrivenChannelAdapter channelAdapter =
-				new MqttPahoMessageDrivenChannelAdapter(MQTT_CLIENT_ID, mqttClientFactory(), MQTT_TOPIC_NAME);
+				new MqttPahoMessageDrivenChannelAdapter(UUID.randomUUID().toString(), mqttClientFactory(), MQTT_TOPIC_NAME);
 		channelAdapter.setCompletionTimeout(5000);
 		channelAdapter.setConverter(new DefaultPahoMessageConverter());
 		channelAdapter.setQos(MQTT_QoS);
@@ -107,10 +110,10 @@ public class MqttConfig {
 		};
 	}
 
-	/**
+	/*
 	 * MQTT input channel flow
 	 *
-	 * mqttInboundChannel (-> inputChannel) -> inboundMessageHandler
+	 * MQTT -> mqttInboundChannel (-> inputChannel) -> inboundMessageHandler(= application)
 	 */
 	@Bean
 	public IntegrationFlow mqttInboundFlow() {
@@ -120,5 +123,54 @@ public class MqttConfig {
 				.get();
 	}
 
+	/*** output channel 설정 (application -> MQTT) ***/
+	@Bean
+	public MessageChannel outputChannel() {
+		return new DirectChannel();
+	}
+
+	@ServiceActivator
+	public MessageHandler mqttOutboundChannel() {
+		MqttPahoMessageHandler handler = new MqttPahoMessageHandler(UUID.randomUUID().toString(), mqttClientFactory());
+		handler.setAsync(false);
+		return handler;
+	}
+
+	/*
+	 * MQTT output channel flow
+	 *
+	 * application -> outputChannel -> inboundMessageHandler -> MQTT
+	 */
+	@Bean
+	public IntegrationFlow mqttOutputFlow() {
+		return IntegrationFlows
+				.from(outputChannel())
+				.handle(mqttOutboundChannel())
+				.get();
+	}
+
+	/*
+	※ Spring Integration을 사용하는 application에서,
+	외부 시스템으로의 데이터 전송 로직에서 application과 Spring Integration과의 의존성을 끊고 싶을때
+	 @MessagingGateway 어노테이션과 @Gateway 어노테이션을 사용한다.
+
+	 본래 Spring Integration을 통해 외부 이기종 시스템과 통신하기 위해서는, 외부 시스템과 접근하기 위한
+	 MessageChannel의 구현체와, MessageChannel을 통해 전송할 데이터를 캡슐화한 Message 인스턴스를 필수적으로 이용해야 한다.
+	 (MqttSampleApplication의 ApplicationRunner에서 예제 확인)
+
+	 @MessagingGateway 어노테이션이 붙은 인터페이스의 @Gateway 어노테이션이 붙은 메서드는
+	 Spring Integration이 @Gateway 어노테이션의 requestChannel 까지 흐르는 flow를 확인해서
+	 자동으로 구현체를 만들어준다.
+	 이 구현체에는 Message 인스턴스를 생성하는 부분과 이 Message를 MessageChannel로 전달하는 로직을 캡슐화하므로,
+	 비즈니스 로직에서는 Spring Integration의 컴포넌트인 MessageChannel이나 Message 인스턴스와의 의존성을 갖지 않게 된다.
+
+	 단, MessagingGateway 어노테이션을 사용하기 위해서는 @IntegrationComponentScan 어노테이션을 통해
+	 MessagingGateway 클래스의 위치를 지정해야 한다.
+	 */
+	@MessagingGateway
+	public interface MqttSendGateway {
+		@Gateway(requestChannel="outputChannel")
+		void sendStringDataToMqtt(String data, @Header(MqttHeaders.TOPIC) String topic);
+	}
 
 }
