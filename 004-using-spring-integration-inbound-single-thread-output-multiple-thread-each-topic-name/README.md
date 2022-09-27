@@ -61,7 +61,9 @@ public MessageHandler inboundMessageHandler() {
         System.out.println("message received: " + msg);
     }
 }
+```
 
+```java
 // after...
 // 난 잘 모르겠는데 이렇게 해결했다는듯;
 class MessageHandler implements Runnable {
