@@ -183,9 +183,9 @@ DirectChannel과 QueueChannel은 채널의 종류 자체가 근본적으로 다�
 채널이 수신한 메시지를 직접 달해주는 반면, QueueChannel은 폴러블(Pollable) 채널로서 메시지가 수신되면 채널 내부에 메시지를 저장하고 이 메시지를 외부의 핸들러가 가져갈
 때까지 메시지를 저장해둔다.
 
-|                  | DirectChannel                    | QueueChannel         |
-|------------------|----------------------------------|----------------------|
-| 채널 구분          | 구독형(Subscrible) 채널               | 폴러블(Pollable) 채널) |
+|                  | DirectChannel                    | QueueChannel        |
+|------------------|----------------------------------|---------------------|
+| 채널 구분          | 구독형(Subscrible) 채널               | 폴러블(Pollable) 채널 |
 | 메시지 수신시 처리   | 구독자 메시지 핸들러의 메서드를 채널이 직접 호출해서 전송 | 채널은 메시지를 저장하고, 외부에서 데이터를 가져갈 때까지 저장을 유지 |
 
 간략하게 의사 코드로 나타내보면, DirectChannel은
@@ -193,7 +193,7 @@ DirectChannel과 QueueChannel은 채널의 종류 자체가 근본적으로 다�
 ```java
 // 선언시
 DirectChannel channel = new DirectChannel();
-channel.subscribe(messageHandler);    // 바로 이 부분이 Spring Integration 어노테이션이 대신 해주는 부분
+channel.subscribe(messageHandler);    // 이 부분이 Spring Integration 어노테이션이 대신 해주는 부분
 
 // 채널로 메시지 송신시
 channel.send(message);
@@ -230,7 +230,7 @@ new Thread(new Handler).start();  // 메시지 핸들러는 별도의 핸들러�
 위와 같이, 메시지 수신시에는 메시지를 저장만 할 뿐 아무것도 안하고 있다가(응?) 외부에서 receive() 메서드를 호출했을 때에
 메시지를 반환만 하고 자신이 갖고 있는 메시지는 삭제하는 특성이 있다.
 
-이런 특성으로, QueueChannel이 채널과 핸들러를 별로 클래스로 분리하기에 좋은 것 같으므로, DirectChannel을 QueueChannel로 변경한다.
+이런 특성으로, QueueChannel이 채널과 핸들러를 별로 클래스로 분리하기에 좋은 것 같으므로, 출력 채널을 DirectChannel에서 QueueChannel로 변경한다.
 
 ### 라우터 작성
 
