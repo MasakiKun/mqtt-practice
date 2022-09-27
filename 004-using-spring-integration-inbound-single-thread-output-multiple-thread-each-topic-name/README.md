@@ -244,7 +244,6 @@ Spring Integration에는 메시지 수신시, 지정된 특정 조건에 따라 
 // package 및 import 생략
 // 이 코드는 저장소에 저장된 코드와는 조금 다른데, 코드를 짧게 작성하기 위해 의도적으로 예외처리나 번잡한 반복 코드들을 제외했기 때문임
 public class EachMqttTopicNameRouter extends AbstractMessageRouter {
-    @Autowired
     private ApplicationContext ctx;
 
     @Override
@@ -285,8 +284,6 @@ public class EachMqttTopicNameRouter extends AbstractMessageRouter {
 이후에는 위에서 작성한 라우터를 Spring Integration flow로 만들어서 스프링 빈으로 등록한다.
 
 ```java
-import java.beans.BeanProperty;
-
 @Configuration
 @EnableIntegration
 public class MqttConfig {
@@ -302,7 +299,7 @@ public class MqttConfig {
 	
     @Bean
     public AbstractMessageRouter router() {
-        return new EachMqttTopicNameRouter();
+        return new EachMqttTopicNameRouter(applicationContext);
     }
 	
     @Bean
