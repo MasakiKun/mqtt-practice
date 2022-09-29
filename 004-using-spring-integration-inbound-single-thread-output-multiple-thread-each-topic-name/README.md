@@ -148,9 +148,9 @@ public IntegrationFlow inboundFlow() {
 Spring Integration은 데이터 처리의 끝점 구성요소로써, 데이터를 처리하기 위한 메시지 핸들러 뿐만 아니라 특정 조건으로 데이터를 분기해서 전달해주는
 라우터라는 구성요소가 있다.
 
-그렇다면 MQTT에서 데이터가 인입되면, 라우터에서 조건(이 토픽명에 해당하는 스레드가 존재하는가?)을 확인해서 분기 처리를 해주면 되지 않을까?
+그렇다면 MQTT에서 데이터가 인입되면, 라우터에서 이 토픽명에 해당하는 스레드가 떠 있는지 확인해서 해당 스레드로 분기 처리를 해주면 되지 않을까?
 
-조건은 이 토픽명에 해당하는 메시지 핸들러 빈이 등록되어 있는지 확인하고, 빈이 등록되어 있다면 이 빈으로 분기하고, 빈이 없다면 이 빈을 새로
+이를테면 이 토픽명에 해당하는 메시지 핸들러 빈이 등록되어 있는지 확인하고, 빈이 등록되어 있다면 이 빈으로 분기하고, 빈이 없다면 이 빈을 새로
 생성한 다음에 역시 이 빈을 가져와서 분기해주면 되지 않을까?
 
 ...했는데 아뿔싸... 라우터는 데이터를 메시지 핸들러로 전달하지는 못하고, 데이터 전송 터널 역할을 하는 채널로만 전송할 수 있었다.
@@ -197,8 +197,8 @@ DirectChannel의 특성상 그 다음의 end-point는 상위의 DirectChannel과
 있기는 하다. 하지만 이 채널은 메시지 수신시마다 별도의 스레드가 생성된 후 메시지를 해당 스레드로 전달하기 때문에, 맨 처음에 언급한 해결법과 동일한 결과를 보여줄 것이다.
 ~~사실 아직 안써봄~~
 
-이 이슈를 해소하기 위해서는, 메시지를 수신하면 다음 구성요소로 스스로 전달하는(그 덕에 메시지 수신시부터 끝점의 처리가 끝날때까지 단일 스레드 처리가 강제되는)
-DirectChannel이 아닌, 외부에서 직접 메시지를 가져가도록 구성된 QueueChannel을 사용할 필요가 있다.
+이 이슈를 해소하기 위해서, 메시지를 수신하면 다음 구성요소로 스스로 전달하는(그 덕에 메시지 수신시부터 끝점의 처리가 끝날때까지 단일 스레드 처리가 강제되는)
+DirectChannel이 아닌, 외부에서 직접 메시지를 가져가도록 구성된 QueueChannel을 사용해보면 어떨까 싶었다.
 
 DirectChannel과 QueueChannel은 채널의 종류 자체가 근본적으로 다르다.
 
@@ -220,7 +220,7 @@ channel.subscribe(messageHandler);    // 이 부분이 Spring Integration 어노
 
 // 채널로 메시지 송신시
 channel.send(message);
-// send 메서드 내부에서 DirectChannel 내부에서 messageHandler.handleMessage(message) 를 호출해서 메시지를 직접 전달해준다.
+// DirectChannel의 send 메서드 내부에서 messageHandler.handleMessage(message) 를 호출해서 메시지를 직접 전달해준다.
 ```
 
 이렇게 DirectChannel이 능동적으로 메시지 핸들러를 호출해서 전달하는데 반해, QueueChannel은
@@ -232,7 +232,7 @@ QueueChannel channel = new QueueChannel();
 
 // 채널로 메시지 송신시
 channel.send(message);
-// send 메서드 내부에서 channel 내부의 큐에 메시지를 저장된다. 이후 별도의 핸들러에서 receive() 메서드를 호출해서 Queue의 내용을 조회한다.
+// QueueChannel의 send 메서드 내부에서 자기 자신의 큐에 메시지를 저장된다. 이후 별도의 핸들러에서 receive() 메서드를 호출해서 Queue의 내용을 조회한다.
 
 // another message handler...
 class Handler implements Runnable {
