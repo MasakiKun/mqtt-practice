@@ -220,7 +220,7 @@ channel.subscribe(messageHandler);    // 이 부분이 Spring Integration 어노
 
 // 채널로 메시지 송신시
 channel.send(message);
-// 이렇게 호출될 경우, DirectChannel 내부에서 messageHandler.handleMessage(message) 를 호출해서 메시지를 직접 전달해준다.
+// send 메서드 내부에서 DirectChannel 내부에서 messageHandler.handleMessage(message) 를 호출해서 메시지를 직접 전달해준다.
 ```
 
 이렇게 DirectChannel이 능동적으로 메시지 핸들러를 호출해서 전달하는데 반해, QueueChannel은
@@ -232,7 +232,7 @@ QueueChannel channel = new QueueChannel();
 
 // 채널로 메시지 송신시
 channel.send(message);
-// 이렇게 메시지가 수신될 경우, channel 내부의 큐에 메시지를 저장된다. 이후 별도의 핸들러에서 receive() 메서드를 호출해서 Queue의 내용을 조회한다.
+// send 메서드 내부에서 channel 내부의 큐에 메시지를 저장된다. 이후 별도의 핸들러에서 receive() 메서드를 호출해서 Queue의 내용을 조회한다.
 
 // another message handler...
 class Handler implements Runnable {
