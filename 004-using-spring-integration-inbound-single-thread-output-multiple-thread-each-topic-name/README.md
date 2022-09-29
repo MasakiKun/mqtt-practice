@@ -314,9 +314,57 @@ public class MqttConfig {
 
 ### 테스트
 
-실제로 별도의 스레드에서 처리가 되는지 확인한다.
+테스트를 위한 코드는 ApplicationRunner를 이용해서 구현했다.
 
-ASAP
+```java
+@Bean
+public ApplicationRunner runner(ApplicationContext ctx) {
+    return new ApplicationRunner() {
+        @Autowired
+        private MqttConfig.MqttSendGateway gateway;
+
+        @Override
+        public void run(ApplicationArguments args) throws Exception {
+            System.out.println("***** application started... *****");
+
+            System.out.println("5 sec wait...");
+
+            final String topic1 = "hello/world/1sttopic";
+            final String topic2 = "hello/world/2ndtopic";
+
+            Thread.sleep(5000);
+
+            gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), topic1);
+
+            System.out.println("message sent to 1st topic, and 1.5 sec wait...");
+
+            Thread.sleep(1500);
+
+            gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), topic2);
+
+            System.out.println("message send to 2nd topic, and 1.5 sec wait...");
+
+            gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), topic1);
+            gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), topic2);
+            System.out.println("message send to 1st topic and 2nd topic");
+
+            Thread.sleep(1000);
+
+            System.out.println("***** application end... *****");
+
+            System.exit(0);
+        }
+    };
+}
+```
+
+위 코드를 실행한 실행 결과는 아래와 같다.
+
+![](https://user-images.githubusercontent.com/12710869/192915262-d74f5bc1-0c64-4b15-be9d-50ec56641d70.png)
+
+위 로그를 살펴보면 메시지 핸들러의 스레드 명이 토픽명에 따라서 각각 ```Thread-11```과 ```Thread-12```로
+달리 표시되는 것을 확인할 수 있다.
+
 
 ### unresolved issues
 
