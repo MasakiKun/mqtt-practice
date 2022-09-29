@@ -157,7 +157,7 @@ Spring Integration은 데이터 처리의 끝점 구성요소로써, 데이터�
 
 그렇다면 라우터랑 메시지 핸들러 사이에 채널을 두면 되지!
 
-![](https://user-images.githubusercontent.com/12710869/192945254-b84538c5-97a6-40be-b339-8b4e349428be.png)
+![](https://user-images.githubusercontent.com/12710869/192955123-b99ea505-d49a-4113-bc26-d71b42c6b608.png)
 
 그러나 진짜로 저렇게 했더니, inputChannel에서 Message Handler까지 단일 스레드로 흐르는게 아닌가 (...) 심지어는 Message Handler #1이랑
 Message Handler #2랑 #3이 전부 같은 스레드로 뜨는 것이었다 (......)
@@ -202,7 +202,7 @@ DirectChannel이 아닌, 외부에서 직접 메시지를 가져가도록 구성
 
 DirectChannel과 QueueChannel은 채널의 종류 자체가 근본적으로 다르다.
 
-DirectChannel은 구독형(Subscrible) 채널로서, 자신에게 메시지가 수신되면 자신에게 가입한 메시지 핸들러에게 메시지를 직접 전달해준다. 메시지 핸들러는 채널을 구독만 해 두면, 채널이 메시지 핸들러에게 메시지를 전달받게(push) 된다.
+DirectChannel은 구독형(Subscrible) 채널로서, 자신에게 메시지가 수신되면 자신에게 가입한 메시지 핸들러에게 메시지를 직접 전달해준다. 메시지 핸들러는 채널을 구독만 해 두면, 채널이 직접 메시지 핸들러에게 메시지를 전달해주게(push) 된다.
 
 반면에 QueueChannel은 폴러블(Pollable) 채널로서, 메시지가 수신되면 채널 내부에 메시지를 저장하고 이 메시지를 외부의 핸들러가 가져갈 때까지 메시지를 저장해둔다. 메시지 핸들러는 주기적으로 채널을 조회해서(polling) 데이터가 수신되었는지 확인해야 한다.
 
