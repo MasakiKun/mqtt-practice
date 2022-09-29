@@ -265,7 +265,8 @@ new Thread(new Handler).start();  // 메시지 핸들러는 별도의 핸들러�
 // kr.ayukawa.mqttpractice.config.router.EachMqttTopicNameRouter
 
 // package 및 import 생략
-// 이 코드는 저장소에 저장된 코드와는 조금 다른데, 코드를 짧게 작성하기 위해 의도적으로 예외처리나 번잡한 반복 코드들을 제외했기 때문임
+// 이 코드는 그대로는 컴파일되지 않는데, 짧게 작성하기 위해 의도적으로 예외처리나 번잡한 반복 코드들을 제외했기 때문임
+// 실제 코드는 저장소의 코드를 봅시다 (-.-)v
 public class EachMqttTopicNameRouter extends AbstractMessageRouter {
     private ApplicationContext ctx;
 
