@@ -32,17 +32,26 @@ public class MqttMultipleThreadApplication {
 
 				System.out.println("5 sec wait...");
 
+				final String topic1 = "hello/world/1sttopic";
+				final String topic2 = "hello/world/2ndtopic";
+
 				Thread.sleep(5000);
 
-				gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), "hello/world/1sttopic");;
+				gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), topic1);
 
 				System.out.println("message sent to 1st topic, and 1.5 sec wait...");
 
 				Thread.sleep(1500);
 
-				gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), "hello/world/2ndtopic");;
+				gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), topic2);
 
 				System.out.println("message send to 2nd topic, and 1.5 sec wait...");
+
+				gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), topic1);
+				gateway.sendStringDataToMqtt(LocalDateTime.now().toString(), topic2);
+				System.out.println("message send to 1st topic and 2nd topic");
+
+				Thread.sleep(1000);
 
 				System.out.println("***** application end... *****");
 
