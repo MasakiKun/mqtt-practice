@@ -143,10 +143,31 @@ public IntegrationFlow inboundFlow() {
 
 즉, ```iotmon/001``` 토픽과 ```iotmon/002``` 토픽에 명시적으로 별도의 스레드를 할당해주면 되지 않을까 생각하게 되었다.
 
+### 의식의 흐름
+
+Spring Integration은 데이터 처리의 끝점으로 데이터를 처리하기 위한 메시지 핸들러 뿐만 아니라, 특정 조건으로 데이터를 분기해서 전달해주는
+라우터라는 구성요소가 있다.
+
+그렇다면 MQTT에서 데이터가 인입되면, 라우터에서 조건(이 토픽명에 해당하는 스레드가 생성되었는가?)을 확인해서 분기 처리를 해주면 되지 않을까?
+
+조건은 이 토픽명에 해당하는 메시지 핸들러 빈이 등록되어 있는지 확인하고, 빈이 등록되어 있다면 이 빈으로 분기하고, 빈이 없다면 이 빈을 새로
+생성한 다음에 역시 이 빈을 가져와서 분기해주면 되지 않을까?
+
+...했는데 아뿔싸... 라우터는 데이터를 메시지 핸들러로 전달하지는 못하고, 데이터 전송 터널 역할을 하는 채널로만 전송할 수 있었다.
+
+그렇다면 라우터랑 메시지 핸들러 사이에 채널을 두면 되지!
+
+![](https://user-images.githubusercontent.com/12710869/192945254-b84538c5-97a6-40be-b339-8b4e349428be.png)
+
+그러나 진짜로 저렇게 했더니, inputChannel에서 Message Handler까지 단일 스레드로 흐르는게 아닌가 (...) 심지어는 Message Handler #1이랑
+Message Handler #2랑 #3이 전부 같은 스레드로 뜨는 것이었다 (......)
+
+그래서 여러가지로 조사해본 결과, 출력채널의 종류를 변경해야 겠다는 결론에 다다르게 되었다.
+
 ### 메시지 채널 변경
 
-먼저 해야 할 일은 메시지 채널을 변경하는 일이다. Spring Integration의 기본 채널은 ```DirectChannel```인데, 위 코드를 보면 알겠지만
-이 프로젝트 또한 DirectChannel을 사용하고 있었다.
+위 의식의 흐름에서 언급했듯이, 최초 데이터 흐름에서부터 끝점(Message Handler)까지 데이터가 전부 한 스레드에서 흐른다. 사실 이것은 Spring Integration의
+기본 채널의 특성이다. Spring Integration의 기본 채널은 ```DirectChannel```인데, 위 코드를 보면 알겠지만 이 프로젝트 또한 DirectChannel을 사용하고 있었다.
 
 이 채널의
 [javadoc 문서](https://docs.spring.io/spring-integration/api/org/springframework/integration/channel/DirectChannel.html)를
@@ -164,7 +185,7 @@ public IntegrationFlow inboundFlow() {
 
 DirectChannel의 특성상 그 다음의 end-point는 상위의 DirectChannel과 같은 스레드에서 실행되므로, ~~때려죽여도~~ 멀티스레드로 처리할 수는 없다는 의미가 된다.
 
-그렇기 때문에, 중간에 라우터를 둬서 아래와 같은 구성으로 간다 하더라도
+그렇기 때문에, 위에서 언급한 것처럼 라우터를 둬서 아래와 같은 구성으로 간다 하더라도
 
 ![](https://user-images.githubusercontent.com/12710869/192131865-4b407d58-40d3-43f8-9237-e838de7cfd35.png)
 
@@ -234,9 +255,9 @@ new Thread(new Handler).start();  // 메시지 핸들러는 별도의 핸들러�
 
 ### 라우터 작성
 
-Spring Integration에는 메시지 수신시, 지정된 지정된 조건에 맞는 채널로의 분기를 지원하는 라우터가 있다.
+위 내용대로 출력 채널의 종류를 변경했다면, 올바른 출력 채널로 데이터를 흘려보낼 수 있도록 라우터를 짜면 되겠다.
 
-이 라우터를 통해 토픽에 맞는 채널로 분기를 하도록 짜되, 만약 토픽에 맞는 채널이 생성되어 있지 않다면 채널을 새로 생성해서 스프링 빈으로 등록한다.
+라우터를 통해 토픽에 맞는 채널로 분기를 하도록 짜되, 만약 토픽에 맞는 채널이 생성되어 있지 않다면 채널을 새로 생성해서 스프링 빈으로 등록한다.
 
 ```java
 // kr.ayukawa.mqttpractice.config.router.EachMqttTopicNameRouter
